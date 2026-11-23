@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /thanks
+Disallow: /404
+
+Sitemap: https://session-house-boston-demo.up.railway.app/sitemap.xml

@@ -1,0 +1,9 @@
+{
+  "name": "session-house-boston",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Session House (Adams Village, Boston MA) — template-v2 demo site (websites lane)",
+  "main": "server.js",
+  "engines": { "node": ">=20" },
+  "scripts": { "start": "node server.js" }
+}
