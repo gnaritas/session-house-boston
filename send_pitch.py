@@ -1,6 +1,6 @@
 # Session House pitch: guards + asserts + window + send + read-back + registry append + lane.db event (abort-on-any-gate)
 # Adapted from the proven copa-cafe / threemonkeys send_pitch.py (2026-11-22). Resume-safe: existing registry pitch row = skip.
-import json, re, subprocess, sys, os, sqlite3, datetime, time
+import json, re, subprocess, sys, os, sqlite3, datetime, time, imaplib
 from zoneinfo import ZoneInfo
 
 DRAFT = '/Users/rleon/sites/session-house-boston/PITCH-DRAFT.md'
@@ -98,15 +98,25 @@ if os.environ.get('DRY'):
     sys.exit(f'GUARDS+ASSERTS PASS (dry, not sent); words={n}')
 
 # 6) send (body on stdin, --json envelope; message_id from the envelope JSON)
-res = subprocess.run(['email', 'send', '--account', 'jarvis', '--as', 'websites',
-                      '--to', TO, '--subject', SUBJ, '--json'],
-                     input=body.encode(), capture_output=True, timeout=120)
-try:
-    env = json.loads(res.stdout.decode())
-except Exception:
-    open(ENVOUT, 'w').write(res.stdout.decode() + '\n---STDERR---\n' + res.stderr.decode())
-    sys.exit('ABORT: unparseable send envelope — do NOT resend, read back Sent Mail first')
-json.dump({'ok': env.get('ok'), 'env': env}, open(ENVOUT, 'w'))
+env = None
+if os.path.exists(ENVOUT):
+    try:
+        prev = json.load(open(ENVOUT))
+        if prev.get('ok'):
+            env = prev['env']
+            print('RESUME: reusing send envelope from disk (mail already sent — NEVER re-send)')
+    except Exception:
+        pass
+if env is None:
+    res = subprocess.run(['email', 'send', '--account', 'jarvis', '--as', 'websites',
+                          '--to', TO, '--subject', SUBJ, '--json'],
+                         input=body.encode(), capture_output=True, timeout=120)
+    try:
+        env = json.loads(res.stdout.decode())
+    except Exception:
+        open(ENVOUT, 'w').write(res.stdout.decode() + '\n---STDERR---\n' + res.stderr.decode())
+        sys.exit('ABORT: unparseable send envelope — do NOT resend, read back Sent Mail first')
+    json.dump({'ok': env.get('ok'), 'env': env}, open(ENVOUT, 'w'))
 ok = env.get('ok')
 mid = (env.get('data') or {}).get('message_id') or (env.get('data') or {}).get('msg_id')
 print('SEND ok=', ok, 'msg:', mid if ok else env)
