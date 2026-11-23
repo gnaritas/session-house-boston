@@ -103,6 +103,7 @@ const server = http.createServer((req, res) => {
       const html = `<h2>New pub note from the site</h2><p><b>Name:</b> ${escapeHtml(name)}<br><b>Phone:</b> ${escapeHtml(phone || '-')}<br><b>Email:</b> ${escapeHtml(email || '-')}</p><p>${escapeHtml(msg || '(no message body)').replace(/\n/g, '<br>')}</p>`;
       audit({ name, phone, email, message: msg });
       const deliver = () => {
+        console.log('MAILSENT ' + subject);
         res.writeHead(303, { Location: '/thanks' });
         res.end();
       };
